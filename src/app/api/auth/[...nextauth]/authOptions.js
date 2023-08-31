@@ -3,6 +3,9 @@ import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 
 const authOptions = {
+  pages: {
+    signIn: "/user/signin",
+  },
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_ID,
@@ -15,17 +18,25 @@ const authOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        username: { label: "Username", type: "text" },
+        name: { label: "Name", type: "text" },
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
         const user = {
           id: "1",
-          username: "J Smith",
+          name: "Anisuzzaman",
           email: "admin@demo.com",
           password: "123456",
+          image:
+            "https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50",
         };
+
+        if (credentials?.signup === "true") {
+          console.log("User Sign Up");
+        } else {
+          console.log("User Sign In");
+        }
 
         if (
           credentials?.email === user.email &&
@@ -38,23 +49,36 @@ const authOptions = {
       },
     }),
   ],
-  events: {
-    async signIn(message) {
-      const res = await fetch("/api/web-auth/signin", {
-        method: "POST",
-        body: {
-          email: message?.user?.email,
-          password:
-            message?.account?.provider !== "credentials"
-              ? message?.user?.password
-              : "403403",
-          provider: message?.account?.provider,
+  session: {
+    strategy: "jwt",
+    maxAge: 60 * 60 * 24, // Expire in 1 Day
+  },
+  callbacks: {
+    async jwt({ token, user, account, profile, isNewUser }) {
+      console.log("My Account, ", account);
+      console.log("My User, ", user);
+      if (user) {
+        return {
+          ...token,
+          image: user.image,
+          name: user.name,
+        };
+      }
+      return token;
+    },
+    async session({ session, user, token }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          image: token.image,
+          name: token.name,
         },
-      });
-      const data = await res.json();
-      console.log(data);
+      };
     },
   },
+  secret: process.env.NEXTAUTH_SECRET,
+  // debug: process.env.NODE_ENV === "development",
 };
 
 export default authOptions;

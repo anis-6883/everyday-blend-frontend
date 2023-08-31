@@ -8,17 +8,15 @@ import { toast } from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
 import * as Yup from "yup";
 
-export default function SignUpForm() {
+export default function SignInForm() {
   const { replace } = useRouter();
 
   const initialValues = {
-    name: "",
     email: "",
     password: "",
   };
 
   const validationSchema = Yup.object().shape({
-    name: Yup.string().required("Required!"),
     email: Yup.string().email("Invalid Email!").required("Required"),
     password: Yup.string()
       .min(6, "Password at least 6 characters long!")
@@ -26,7 +24,7 @@ export default function SignUpForm() {
   });
 
   const onSubmit = (values) => {
-    values.signup = true;
+    values.signup = false;
 
     signIn("credentials", {
       ...values,
@@ -36,7 +34,7 @@ export default function SignUpForm() {
         toast.error(callback?.error);
       }
       if (callback?.ok && !callback?.error) {
-        toast.success("Sign Up Successfully!");
+        toast.success("Sign In Successfully!");
         replace("/");
       }
     });
@@ -51,37 +49,6 @@ export default function SignUpForm() {
       {(formik) => {
         return (
           <Form>
-            <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text font-semibold">
-                  Name<span className="mr-2 text-red-600">*</span>
-                  <ErrorMessage
-                    name="name"
-                    component={({ children }) => (
-                      <span className="text-sm text-red-600">({children})</span>
-                    )}
-                  />
-                </span>
-              </label>
-
-              <Field name="name">
-                {({ field, meta }) => {
-                  return (
-                    <>
-                      <input
-                        type="text"
-                        className={`${
-                          meta.touched && meta.error
-                            ? "input-error"
-                            : "input-neutral"
-                        } input-neutral input input-bordered w-full`}
-                        {...field}
-                      />
-                    </>
-                  );
-                }}
-              </Field>
-            </div>
             <div className="form-control w-full">
               <label className="label">
                 <span className="label-text font-semibold">
@@ -148,13 +115,17 @@ export default function SignUpForm() {
               </button>
               <p className="mt-3 font-medium">
                 Don{"'"}t have an account?{" "}
-                <Link href="/user/signin" className="text-secondary">
-                  Sign In Here
+                <Link href="/user/signup" className="text-secondary">
+                  Sign Up Here
                 </Link>
               </p>
               <div className="divider">OR</div>
-              <button type="button" className="btn-light btn w-full">
-                <FcGoogle className="text-xl" /> Sign Up With Google
+              <button
+                type="button"
+                className="btn-light btn w-full"
+                onClick={() => signIn("google", { callbackUrl: "/" })}
+              >
+                <FcGoogle className="text-xl" /> Sign In With Google
               </button>
             </div>
           </Form>
