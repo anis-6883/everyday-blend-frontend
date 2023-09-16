@@ -34,17 +34,20 @@ const authOptions = {
 
         if (credentials?.signup === "true") {
           console.log("User Sign Up");
-        } else {
-          console.log("User Sign In");
-        }
-
-        if (
-          credentials?.email === user.email &&
-          credentials?.password === user.password
-        ) {
           return user;
         } else {
-          return null;
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error("Please enter email and password!");
+          }
+
+          if (!user) {
+            throw new Error("Your given credentials is not correct!");
+          }
+
+          if (user && credentials?.password !== user.password) {
+            throw new Error("Your given credentials is not correct!");
+          }
+          return user;
         }
       },
     }),

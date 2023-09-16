@@ -4,12 +4,15 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
+import { ImSpinner6 } from "react-icons/im";
 import * as Yup from "yup";
 
 export default function SignInForm() {
   const { replace } = useRouter();
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const initialValues = {
     email: "",
@@ -18,19 +21,19 @@ export default function SignInForm() {
 
   const validationSchema = Yup.object().shape({
     email: Yup.string().email("Invalid Email!").required("Required"),
-    password: Yup.string()
-      .min(6, "Password at least 6 characters long!")
-      .required("Required"),
+    password: Yup.string().required("Required"),
   });
 
   const onSubmit = (values) => {
     values.signup = false;
+    setIsSubmitted(true);
 
     signIn("credentials", {
       ...values,
       redirect: false,
     }).then((callback) => {
       if (callback?.error) {
+        setIsSubmitted(false);
         toast.error(callback?.error);
       }
       if (callback?.ok && !callback?.error) {
@@ -110,8 +113,13 @@ export default function SignInForm() {
               </Field>
             </div>
             <div className="mt-8">
-              <button type="submit" className="btn btn-secondary w-full">
-                Sign Up
+              <button
+                type="submit"
+                className="btn btn-secondary w-full"
+                disabled={isSubmitted}
+              >
+                Sign In
+                {isSubmitted && <ImSpinner6 className="animate-spin text-xl" />}
               </button>
               <p className="mt-3 font-medium">
                 Don{"'"}t have an account?{" "}
