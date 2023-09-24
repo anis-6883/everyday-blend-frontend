@@ -1,20 +1,25 @@
 "use client";
 
 import { ErrorMessage, Field, Form, Formik } from "formik";
-// import { signIn } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
+import { BsEye, BsEyeSlash } from "react-icons/bs";
 import { FcGoogle } from "react-icons/fc";
+import { ImSpinner6 } from "react-icons/im";
 import { RxCross2 } from "react-icons/rx";
 import * as Yup from "yup";
 
 export default function SignUpForm() {
   const { replace } = useRouter();
   const [showEmail, setShowEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [signUpFormSubmitted, setSignUpFormSubmitted] = useState(false);
   const [otp, setOtp] = useState("");
   const [otpSubmitted, setOtpSubmitted] = useState(false);
+  const [otpValidityMsg, setOtpValidityMsg] = useState("");
 
   const initialValues = {
     name: "",
@@ -30,9 +35,11 @@ export default function SignUpForm() {
       .required("Required"),
   });
 
+  // Form Handler
   const onSubmit = async (values) => {
+    setSignUpFormSubmitted(true);
+    setOtpValidityMsg("");
     setShowEmail(values.email);
-    values.signup = true;
     values.provider = "email";
 
     const data = await fetch("/api/auth/signup", {
@@ -47,31 +54,43 @@ export default function SignUpForm() {
         console.log(err);
       });
 
-    console.log(data);
+    // console.log(data);
 
     if (data.status === false) {
       toast.error("This email already exist!");
+      setSignUpFormSubmitted(false);
     } else {
       toast.success("Otp send successfully!");
+      setSignUpFormSubmitted(false);
       window.otpModal.showModal();
     }
-
-    // signIn("credentials", {
-    //   ...values,
-    //   redirect: false,
-    // }).then((callback) => {
-    //   if (callback?.error) {
-    //     toast.error(callback?.error);
-    //   }
-    //   if (callback?.ok && !callback?.error) {
-    //     toast.success("Sign Up Successfully!");
-    //     replace("/");
-    //   }
-    // });
   };
 
+  // Otp Handler
   const otpSubmitHandler = async () => {
     setOtpSubmitted(true);
+
+    if (!otp) {
+      setOtpValidityMsg("Otp is required!");
+      setOtpSubmitted(false);
+    } else {
+      signIn("credentials", {
+        otp,
+        signup: true,
+        redirect: false,
+      }).then((callback) => {
+        if (callback?.error) {
+          setOtpValidityMsg(callback?.error);
+          setOtpSubmitted(false);
+          toast.error(callback?.error);
+        }
+        if (callback?.ok && !callback?.error) {
+          setOtpValidityMsg("");
+          toast.success("Sign Up Successfully!");
+          replace("/");
+        }
+      });
+    }
   };
 
   return (
@@ -166,9 +185,9 @@ export default function SignUpForm() {
                 <Field name="password">
                   {({ field, meta }) => {
                     return (
-                      <>
+                      <div className="relative">
                         <input
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           className={`${
                             meta.touched && meta.error
                               ? "input-error"
@@ -176,23 +195,45 @@ export default function SignUpForm() {
                           } input input-bordered w-full`}
                           {...field}
                         />
-                      </>
+                        {showPassword ? (
+                          <BsEye
+                            onClick={() => setShowPassword(false)}
+                            className="absolute right-3 top-3 cursor-pointer text-2xl"
+                          />
+                        ) : (
+                          <BsEyeSlash
+                            onClick={() => setShowPassword(true)}
+                            className="absolute right-3 top-3 cursor-pointer text-2xl"
+                          />
+                        )}
+                      </div>
                     );
                   }}
                 </Field>
               </div>
               <div className="mt-8">
-                <button type="submit" className="btn btn-secondary w-full">
+                <button
+                  type="submit"
+                  className="btn btn-primary w-full disabled:bg-[#025CE3] disabled:text-[#d8eeff]"
+                  disabled={signUpFormSubmitted}
+                >
                   Sign Up
+                  {signUpFormSubmitted && (
+                    <ImSpinner6 className="animate-spin" />
+                  )}
                 </button>
                 <p className="mt-3 font-medium">
                   Don{"'"}t have an account?
-                  <Link href="/user/signin" className="ml-2 text-secondary">
+                  <Link href="/user/signin" className="ml-2 text-primary">
                     Sign In Here
                   </Link>
                 </p>
                 <div className="divider">OR</div>
-                <button type="button" className="btn-light btn w-full">
+                <button
+                  type="button"
+                  className="btn-light disabled:text-dark btn w-full disabled:bg-[#DBDBDB] disabled:text-slate-700"
+                  disabled={signUpFormSubmitted}
+                >
                   <FcGoogle className="text-xl" /> Sign Up With Google
                 </button>
               </div>
@@ -215,18 +256,26 @@ export default function SignUpForm() {
           <div className="flex flex-col">
             <input
               type="number"
-              placeholder="Type here"
-              className="input input-bordered input-error w-full"
+              placeholder="Enter OTP"
+              className={`input input-bordered w-full ${
+                otpValidityMsg && "input-error"
+              }`}
               value={otp}
               onChange={(e) => setOtp(e.target.value)}
             />
-            <span className="ml-2 mt-1 text-sm text-red-600">
-              Otp doesn{"'"}t match or expired!
-            </span>
+            {otpValidityMsg && (
+              <span className="ml-2 mt-1 text-sm text-red-600">
+                {otpValidityMsg}
+              </span>
+            )}
           </div>
           <div className="flex justify-end">
-            <button className="btn btn-secondary" onClick={otpSubmitHandler}>
-              Submit
+            <button
+              className="btn btn-primary mt-4 disabled:bg-[#1149bc] disabled:text-[#d8eeff]"
+              onClick={otpSubmitHandler}
+              disabled={otpSubmitted}
+            >
+              Submit {otpSubmitted && <ImSpinner6 className="animate-spin" />}
             </button>
           </div>
         </div>

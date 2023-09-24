@@ -1,3 +1,5 @@
+import { quizCraftBackend } from "@/utils/api/getAxios";
+import cookie from "cookie";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
@@ -23,31 +25,39 @@ const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        const user = {
-          id: "1",
-          name: "Anisuzzaman",
-          email: "admin@demo.com",
-          password: "123456",
-          image:
-            "https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50",
-        };
+        const cookies = cookie.parse(req.headers.cookie);
+        // console.log("NextAuth Req Cookie->", cookies?._temp);
 
         if (credentials?.signup === "true") {
-          console.log("User Sign Up");
-          return user;
+          try {
+            const { data } = await quizCraftBackend.post(
+              "/api/v1/user/verify-email",
+              { otp: credentials?.otp },
+              {
+                headers: {
+                  token: cookies?._temp,
+                },
+              },
+            );
+
+            if (data.status === false) {
+              throw new Error("OTP is expired or incorrect!");
+            }
+
+            const { name, email, image, role } = data?.data?.user;
+
+            const user = {
+              name,
+              email,
+              image,
+              role,
+            };
+
+            return user; // return the user's data
+          } catch (err) {
+            throw new Error("OTP is expired or incorrect!");
+          }
         } else {
-          if (!credentials?.email || !credentials?.password) {
-            throw new Error("Please enter email and password!");
-          }
-
-          if (!user) {
-            throw new Error("Your given credentials is not correct!");
-          }
-
-          if (user && credentials?.password !== user.password) {
-            throw new Error("Your given credentials is not correct!");
-          }
-          return user;
         }
       },
     }),
@@ -58,13 +68,14 @@ const authOptions = {
   },
   callbacks: {
     async jwt({ token, user, account, profile, isNewUser }) {
-      console.log("My Account, ", account);
-      console.log("My User, ", user);
+      console.log("JWT User => ", user);
+
       if (user) {
         return {
           ...token,
-          image: user.image,
-          name: user.name,
+          image: user?.image,
+          name: user?.name,
+          role: user?.role,
         };
       }
       return token;
@@ -74,8 +85,9 @@ const authOptions = {
         ...session,
         user: {
           ...session.user,
-          image: token.image,
-          name: token.name,
+          image: token?.image,
+          name: token?.name,
+          role: token?.role,
         },
       };
     },

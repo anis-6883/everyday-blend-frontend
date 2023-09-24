@@ -115,7 +115,7 @@ export default function SignInForm() {
             <div className="mt-8">
               <button
                 type="submit"
-                className="btn btn-secondary w-full"
+                className="btn btn-primary w-full"
                 disabled={isSubmitted}
               >
                 Sign In
@@ -123,7 +123,7 @@ export default function SignInForm() {
               </button>
               <p className="mt-3 font-medium">
                 Don{"'"}t have an account?{" "}
-                <Link href="/user/signup" className="text-secondary">
+                <Link href="/user/signup" className="text-primary">
                   Sign Up Here
                 </Link>
               </p>
