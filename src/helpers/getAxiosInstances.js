@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const quizCraftBackend = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
   timeout: 15000,
   headers: {
     "content-type": "application/json",
