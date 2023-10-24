@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { BsEye, BsEyeSlash } from "react-icons/bs";
+import { BsEye, BsEyeSlash, BsGithub } from "react-icons/bs";
 import { FcGoogle } from "react-icons/fc";
 import { ImSpinner6 } from "react-icons/im";
 import { RxCross2 } from "react-icons/rx";
@@ -54,20 +54,21 @@ export default function SignUpForm() {
         console.log(err);
       });
 
-    // console.log(data);
-
+    setSignUpFormSubmitted(false);
     if (data.status === false) {
-      toast.error("This email already exist!");
+      toast.error(data?.message);
       setSignUpFormSubmitted(false);
     } else {
       toast.success("Otp send successfully!");
       setSignUpFormSubmitted(false);
       window.otpModal.showModal();
     }
+    setSignUpFormSubmitted(false);
   };
 
   // Otp Handler
-  const otpSubmitHandler = async () => {
+  const otpSubmitHandler = async (e) => {
+    e.preventDefault();
     setOtpSubmitted(true);
 
     if (!otp) {
@@ -233,8 +234,17 @@ export default function SignUpForm() {
                   type="button"
                   className="btn-light disabled:text-dark btn w-full disabled:bg-[#DBDBDB] disabled:text-slate-700"
                   disabled={signUpFormSubmitted}
+                  onClick={() => signIn("google", { callbackUrl: "/" })}
                 >
                   <FcGoogle className="text-xl" /> Sign Up With Google
+                </button>
+                <button
+                  type="button"
+                  className="btn-light disabled:text-dark btn mt-2 w-full disabled:bg-[#DBDBDB] disabled:text-slate-700"
+                  disabled={signUpFormSubmitted}
+                  onClick={() => signIn("github", { callbackUrl: "/" })}
+                >
+                  <BsGithub className="text-xl" /> Sign Up With Github
                 </button>
               </div>
             </Form>
@@ -251,33 +261,36 @@ export default function SignUpForm() {
           </form>
           <h3 className="text-lg font-bold">OTP Verification</h3>
           <p className="py-4">
-            Enter the OTP you received at <b>{showEmail}</b>
+            Enter the OTP within 2 minutes, which you received at{" "}
+            <b>{showEmail}</b>
           </p>
-          <div className="flex flex-col">
-            <input
-              type="number"
-              placeholder="Enter OTP"
-              className={`input input-bordered w-full ${
-                otpValidityMsg && "input-error"
-              }`}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-            />
-            {otpValidityMsg && (
-              <span className="ml-2 mt-1 text-sm text-red-600">
-                {otpValidityMsg}
-              </span>
-            )}
-          </div>
-          <div className="flex justify-end">
-            <button
-              className="btn btn-primary mt-4 disabled:bg-[#1149bc] disabled:text-[#d8eeff]"
-              onClick={otpSubmitHandler}
-              disabled={otpSubmitted}
-            >
-              Submit {otpSubmitted && <ImSpinner6 className="animate-spin" />}
-            </button>
-          </div>
+          <form onSubmit={otpSubmitHandler}>
+            <div className="flex flex-col">
+              <input
+                type="number"
+                placeholder="Enter OTP"
+                className={`input input-bordered w-full ${
+                  otpValidityMsg && "input-error"
+                }`}
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+              />
+              {otpValidityMsg && (
+                <span className="ml-2 mt-1 text-sm text-red-600">
+                  {otpValidityMsg}
+                </span>
+              )}
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="btn btn-primary mt-4 disabled:bg-[#1149bc] disabled:text-[#d8eeff]"
+                disabled={otpSubmitted}
+              >
+                Submit {otpSubmitted && <ImSpinner6 className="animate-spin" />}
+              </button>
+            </div>
+          </form>
         </div>
       </dialog>
     </>

@@ -1,36 +1,11 @@
-import { quizCraftBackend } from "@/utils/api/getAxios";
+import getAccessToken from "@/helpers/getAccessToken";
+import { quizCraftBackend } from "@/helpers/getAxiosInstances";
+import getRandomString from "@/helpers/getRandomString";
 import cookie from "cookie";
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
-
-async function refreshToken(token) {
-  try {
-    const { data } = await quizCraftBackend.post(
-      "/api/user/refresh-token",
-      {},
-      {
-        headers: {
-          Authorization: `Refresh ${token.refreshToken}`,
-        },
-      },
-    );
-
-    console.log("Refreshed Fire!");
-
-    if (data?.status) {
-      return {
-        ...token,
-        accessToken: data?.data?.accessToken,
-        refreshToken: data?.data?.refreshToken,
-        expiresIn: data?.data?.expiresIn,
-      };
-    }
-  } catch (error) {
-    console.log("Something went wrong on refreshToken!");
-  }
-}
 
 export const authOptions = {
   pages: {
@@ -72,14 +47,7 @@ export const authOptions = {
               throw new Error("OTP is expired or incorrect!");
             }
 
-            const { name, email, image, role } = data?.data?.user;
-
-            const user = {
-              name,
-              email,
-              image,
-              role,
-            };
+            const user = data?.data;
 
             return user; // return the user's data
           } catch (err) {
@@ -90,10 +58,11 @@ export const authOptions = {
             const { data } = await quizCraftBackend.post("/api/user/login", {
               email: credentials?.email,
               password: credentials?.password,
+              provider: "email",
             });
 
             if (data?.status === false) {
-              throw new Error("Your credentials are incorrect!");
+              throw new Error(data?.message);
             } else {
               const user = data?.data;
               return user; // return the user's data
@@ -107,20 +76,66 @@ export const authOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 60 * 60 * 24, // Expire in 1 Day
+    maxAge: 60 * 60 * 12, // Expire in 12 Hours
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        return {
-          ...token,
-          ...user,
+    async jwt({ token, user, account }) {
+      if (account?.provider === "credentials") {
+        if (user) {
+          return {
+            ...token,
+            ...user,
+          };
+        }
+      }
+
+      if (account?.provider === "google") {
+        const values = {
+          name: user?.name,
+          email: user?.email,
+          password: getRandomString(10),
+          image: user?.image,
+          provider: account?.provider,
         };
+        const { data } = await quizCraftBackend.post(
+          "/api/user/register",
+          values,
+        );
+        const userData = data?.data;
+
+        if (userData) {
+          return {
+            ...token,
+            ...userData,
+          };
+        }
+      }
+
+      if (account?.provider === "github") {
+        const values = {
+          name: user?.name,
+          email: user?.email,
+          password: getRandomString(10),
+          image: user?.image,
+          provider: account?.provider,
+        };
+        const { data } = await quizCraftBackend.post(
+          "/api/user/register",
+          values,
+        );
+        const userData = data?.data;
+
+        if (userData) {
+          return {
+            ...token,
+            ...userData,
+          };
+        }
       }
 
       if (new Date().getTime() < token?.expiresIn) return token;
 
-      return await refreshToken(token);
+      return await getAccessToken(token);
     },
     async session({ session, token }) {
       return {

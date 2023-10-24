@@ -1,4 +1,4 @@
-import { quizCraftBackend } from "@/utils/api/getAxios";
+import { quizCraftBackend } from "@/helpers/getAxiosInstances";
 import { serialize } from "cookie";
 import { NextResponse } from "next/server";
 
@@ -7,10 +7,10 @@ const MAX_AGE = 60 * 2; // 2 Minutes;
 export async function POST(request) {
   const values = await request.json();
 
-  const { data } = await quizCraftBackend.post("/api/v1/user/register", values);
+  const { data } = await quizCraftBackend.post("/api/user/register", values);
 
   if (data?.status) {
-    const serialized = serialize("_temp", data.accessToken, {
+    const serialized = serialize("_temp", data?.data?.accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
@@ -26,7 +26,7 @@ export async function POST(request) {
     );
   } else {
     return NextResponse.json(
-      { status: false },
+      { status: false, message: data?.message },
       {
         status: 200,
       },

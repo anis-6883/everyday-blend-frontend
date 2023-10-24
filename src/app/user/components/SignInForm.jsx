@@ -6,13 +6,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { BsEye, BsEyeSlash, BsGithub } from "react-icons/bs";
 import { FcGoogle } from "react-icons/fc";
 import { ImSpinner6 } from "react-icons/im";
 import * as Yup from "yup";
 
 export default function SignInForm() {
   const { replace } = useRouter();
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [signInFormSubmitted, setSignInFormSubmitted] = useState(false);
 
   const initialValues = {
     email: "",
@@ -26,14 +28,14 @@ export default function SignInForm() {
 
   const onSubmit = (values) => {
     values.signup = false;
-    setIsSubmitted(true);
+    setSignInFormSubmitted(true);
 
     signIn("credentials", {
       ...values,
       redirect: false,
     }).then((callback) => {
       if (callback?.error) {
-        setIsSubmitted(false);
+        setSignInFormSubmitted(false);
         toast.error(callback?.error);
       }
       if (callback?.ok && !callback?.error) {
@@ -97,9 +99,9 @@ export default function SignInForm() {
               <Field name="password">
                 {({ field, meta }) => {
                   return (
-                    <>
+                    <div className="relative">
                       <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         className={`${
                           meta.touched && meta.error
                             ? "input-error"
@@ -107,7 +109,18 @@ export default function SignInForm() {
                         } input-neutral input input-bordered w-full`}
                         {...field}
                       />
-                    </>
+                      {showPassword ? (
+                        <BsEye
+                          onClick={() => setShowPassword(false)}
+                          className="absolute right-3 top-3 cursor-pointer text-2xl"
+                        />
+                      ) : (
+                        <BsEyeSlash
+                          onClick={() => setShowPassword(true)}
+                          className="absolute right-3 top-3 cursor-pointer text-2xl"
+                        />
+                      )}
+                    </div>
                   );
                 }}
               </Field>
@@ -115,11 +128,13 @@ export default function SignInForm() {
             <div className="mt-8">
               <button
                 type="submit"
-                className="btn btn-primary w-full"
-                disabled={isSubmitted}
+                className="btn btn-primary w-full disabled:bg-[#025CE3] disabled:text-[#d8eeff]"
+                disabled={signInFormSubmitted}
               >
                 Sign In
-                {isSubmitted && <ImSpinner6 className="animate-spin text-xl" />}
+                {signInFormSubmitted && (
+                  <ImSpinner6 className="animate-spin text-xl" />
+                )}
               </button>
               <p className="mt-3 font-medium">
                 Don{"'"}t have an account?{" "}
@@ -130,10 +145,19 @@ export default function SignInForm() {
               <div className="divider">OR</div>
               <button
                 type="button"
+                disabled={signInFormSubmitted}
                 className="btn-light btn w-full"
                 onClick={() => signIn("google", { callbackUrl: "/" })}
               >
                 <FcGoogle className="text-xl" /> Sign In With Google
+              </button>
+              <button
+                type="button"
+                className="btn-light disabled:text-dark btn mt-2 w-full disabled:bg-[#DBDBDB] disabled:text-slate-700"
+                disabled={signInFormSubmitted}
+                onClick={() => signIn("github", { callbackUrl: "/" })}
+              >
+                <BsGithub className="text-xl" /> Sign Up With Github
               </button>
             </div>
           </Form>

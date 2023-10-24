@@ -1,6 +1,6 @@
 "use client";
 
-import { quizCraftBackend } from "@/utils/api/getAxios";
+import { quizCraftBackend } from "@/helpers/getAxiosInstances";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

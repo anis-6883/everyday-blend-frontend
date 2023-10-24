@@ -15,7 +15,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body className={`${inter.className}`} suppressHydrationWarning>
         <Providers>{children}</Providers>
-        <Toaster position="top-center" reverseOrder={false} />
+        <Toaster position="top-right" reverseOrder={false} />
       </body>
     </html>
   );
