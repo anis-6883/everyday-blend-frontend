@@ -2,6 +2,7 @@
 
 import { quizCraftBackend } from "@/helpers/getAxiosInstances";
 import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -9,7 +10,6 @@ export default function Home() {
   const { data: session } = useSession();
   const [username, setUsername] = useState("");
   const { replace } = useRouter();
-  console.log(session?.user);
 
   const logout = async () => {
     await signOut({
@@ -43,6 +43,7 @@ export default function Home() {
       Home Page <button onClick={logout}>Logout</button>
       {session && <p>{session.user.name}</p>}
       {username && <p>{username}</p>}
+      <Link href="/admin">Admin</Link>
     </div>
   );
 }

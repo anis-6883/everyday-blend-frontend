@@ -16,12 +16,12 @@ export default async function Page() {
       <div className="card w-10/12 bg-base-100 shadow-xl lg:card-side">
         <figure className="w-1/2">
           <Image
+            src="/images/signin.png"
             width={0}
             height={0}
+            alt="Image"
+            className="w-[450px]"
             sizes="100vw"
-            className="h-2/3 w-2/3"
-            src="/images/signup.png"
-            alt="Album"
             priority={true}
           />
         </figure>

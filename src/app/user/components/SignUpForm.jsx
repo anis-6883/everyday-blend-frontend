@@ -225,7 +225,11 @@ export default function SignUpForm() {
                 </button>
                 <p className="mt-3 font-medium">
                   Don{"'"}t have an account?
-                  <Link href="/user/signin" className="ml-2 text-primary">
+                  <Link
+                    replace={true}
+                    href="/user/signin"
+                    className="ml-2 text-primary"
+                  >
                     Sign In Here
                   </Link>
                 </p>

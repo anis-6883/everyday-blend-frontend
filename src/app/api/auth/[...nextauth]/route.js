@@ -89,29 +89,7 @@ export const authOptions = {
         }
       }
 
-      if (account?.provider === "google") {
-        const values = {
-          name: user?.name,
-          email: user?.email,
-          password: getRandomString(10),
-          image: user?.image,
-          provider: account?.provider,
-        };
-        const { data } = await quizCraftBackend.post(
-          "/api/user/register",
-          values,
-        );
-        const userData = data?.data;
-
-        if (userData) {
-          return {
-            ...token,
-            ...userData,
-          };
-        }
-      }
-
-      if (account?.provider === "github") {
+      if (account?.provider === "google" || account?.provider === "github") {
         const values = {
           name: user?.name,
           email: user?.email,
